@@ -10,6 +10,16 @@ const MongoClient = require("mongodb").MongoClient
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 
+app.use(function (req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*")
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  )
+  res.header("Access-Control-Allow-Methods", "PUT, POST, GET, DELETE, OPTIONS")
+  next()
+})
+
 let connect = `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@cluster0.htyqj.mongodb.net/<dbname>?retryWrites=true&w=majority`
 
 MongoClient.connect(connect, { useUnifiedTopology: true })
