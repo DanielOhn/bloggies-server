@@ -3,6 +3,7 @@ require("dotenv/config")
 const express = require("express")
 const bodyParser = require("body-parser")
 const cors = require("cors")
+const { ObjectId } = require("mongodb")
 
 const app = express()
 const port = 3001
@@ -42,6 +43,8 @@ MongoClient.connect(connect, { useUnifiedTopology: true })
 
     // POST used to create blogs
     app.post(`/create-blog`, (req, res) => {
+      let id = blogsCollection.countDocuments()
+
       blogsCollection
         .insertOne(req.body)
         .then((result) => {
@@ -51,7 +54,31 @@ MongoClient.connect(connect, { useUnifiedTopology: true })
     })
 
     app.put(`/update-blog`, (req, res) => {
-      console.log(req.body)
+      let { id, name, blog } = req.body
+
+      blogsCollection
+        .findOneAndUpdate(
+          { _id: ObjectId(id) },
+          { $set: { name: name, blog: blog } },
+          { upsert: true }
+        )
+        .then((res) => {
+          if (res.ok) return res.json("Success")
+        })
+        .catch((err) => console.error(err))
+    })
+
+    app.delete(`/delete-blog`, (req, res) => {
+      let { id, name } = req.body
+
+      blogsCollection
+        .deleteOne({ _id: ObjectId(id) })
+        .then((result) => {
+          if (result.deletedCount === 0) return res.json(`No blog to delete`)
+
+          res.json(`Deleted ${name}`)
+        })
+        .catch((err) => console.error(err))
     })
 
     app.listen(port, () => {
