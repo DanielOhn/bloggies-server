@@ -3,6 +3,8 @@ require("dotenv/config")
 const express = require("express")
 const bodyParser = require("body-parser")
 const cors = require("cors")
+const bcrypt = require("bcrypt")
+
 const { ObjectId } = require("mongodb")
 
 const app = express()
@@ -20,6 +22,7 @@ app.use(
 )
 
 let connect = `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@cluster0.htyqj.mongodb.net/<dbname>?retryWrites=true&w=majority`
+const saltRounds = 12
 
 MongoClient.connect(connect, { useUnifiedTopology: true })
   .then((client) => {
@@ -43,8 +46,6 @@ MongoClient.connect(connect, { useUnifiedTopology: true })
 
     // POST used to create blogs
     app.post(`/create-blog`, (req, res) => {
-      let id = blogsCollection.countDocuments()
-
       blogsCollection
         .insertOne(req.body)
         .then((result) => {
@@ -79,6 +80,31 @@ MongoClient.connect(connect, { useUnifiedTopology: true })
           res.json(`Deleted ${name}`)
         })
         .catch((err) => console.error(err))
+    })
+
+    app.get(`/users`, (req, res) => {
+      const users = db
+        .collection("users")
+        .find()
+        .toArray()
+        .then(res)
+        .then((data) => res.json(data))
+        .catch((err) => res.send(err))
+    })
+
+    app.post(`/create-user`, (req, res) => {
+      let { username, email, password } = req.body
+
+      if (email === undefined) email = ""
+
+      bcrypt.hash(password, saltRounds, (err, hash) => {
+        usersCollection
+          .insertOne({ username: username, email: email, password: hash })
+          .then((data) => {
+            if (data) res.redirect("/")
+          })
+          .catch((err) => console.log(err))
+      })
     })
 
     app.listen(port, () => {
