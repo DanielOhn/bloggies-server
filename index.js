@@ -30,6 +30,7 @@ MongoClient.connect(connect, { useUnifiedTopology: true })
 
     const db = client.db("bloggies-db")
     const blogsCollection = db.collection("blogs")
+    const usersCollection = db.collection("users")
 
     // Handlers
     app.get(`/blogs`, (req, res) => {
@@ -96,6 +97,10 @@ MongoClient.connect(connect, { useUnifiedTopology: true })
       let { username, email, password } = req.body
 
       if (email === undefined) email = ""
+
+      // console.log(req.body)
+
+      // res.redirect('/')
 
       bcrypt.hash(password, saltRounds, (err, hash) => {
         usersCollection
